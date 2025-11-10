@@ -1,0 +1,333 @@
+/* =========================================================
+   CHRISCV • Global Styles (Bootstrap-friendly, light theme)
+   Notes for marker:
+   - Single stylesheet for the app (Navbar/Footer/Pages)
+   - No inline styles used in components
+   - Sections are clearly labelled for maintainability
+   ========================================================= */
+
+/* ---------- Base & Typography ---------- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: 'Inter', 'Roboto', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: #f3f5f8;            /* soft, professional base */
+  color: #1a1f2b;                        /* readable body text */
+  line-height: 1.6;
+}
+
+a { color: #0d6efd; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+h1, h2, h3, h4, h5 {
+  font-weight: 600;
+  color: #3b6591;                        /* headline slate */
+}
+
+p { margin-bottom: 0.8rem; }
+
+header h1 { font-weight: 700; letter-spacing: -0.02em; }
+header p.text-muted { font-size: 0.9rem; }
+
+/* Limit content width for readability on text-heavy pages */
+main.container { max-width: 960px; }
+.container-xl { max-width: 1140px; }
+
+/* ---------- Common Card/List Cosmetics ---------- */
+.card {
+  border-radius: 0.75rem;
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+  background: #fff;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0.5rem 1rem rgba(13, 27, 42, 0.10);
+}
+
+.list-group-item {
+  background-color: #fff;
+  border: none;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.badge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  padding: 0.4em 0.6em;
+}
+
+/* ---------- Footer ---------- */
+.site-footer {
+  border-top: 1px solid #e5e7eb;
+  padding: 20px;
+  text-align: center;
+  color: #6c757d;
+  background-color: #fff;
+}
+
+/* =========================================================
+   HOME • Hero
+   ========================================================= */
+.hero-banner {
+  min-height: 100vh;
+  background-image: url('/public/hero-bg.jpg');   /* correct public path */
+  background-size: cover;
+  background-position: center right;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
+.hero-banner::before {
+  /* dark-left to clear-right scrim for overlay legibility */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.55) 0%,
+    rgba(0, 0, 0, 0.25) 60%,
+    rgba(0, 0, 0, 0.00) 100%
+  );
+  z-index: 0;
+}
+
+.hero-banner .container {
+  position: relative;
+  z-index: 1;
+}
+
+/* =========================================================
+   NAVBAR • Two themes (transparent on Home, solid elsewhere)
+   React toggles only the class; all color handled in CSS
+   ========================================================= */
+
+/* Default (solid, used on non-home pages) */
+.navbar-default {
+  background-color: #fff !important;
+  border-bottom: 1px solid #dee2e6 !important;
+  transition: background-color 0.3s ease, border 0.3s ease;
+}
+.navbar-default .navbar-brand,
+.navbar-default .nav-link { color: #212529 !important; }
+.navbar-default .nav-link.active {
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.navbar-default .nav-search-btn {
+  border-color: #0d6efd;
+  color: #0d6efd;
+}
+.navbar-default .nav-search-btn:hover {
+  background-color: #0d6efd;
+  color: #fff;
+}
+
+/* Transparent (over hero) */
+.navbar-hero {
+  background: transparent !important;
+  border: none !important;
+  position: absolute; top: 0; left: 0; width: 100%;
+  z-index: 10;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+.navbar-hero .navbar-brand,
+.navbar-hero .nav-link { color: #fff !important; }
+.navbar-hero .nav-link.active {
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.navbar-hero .nav-search-btn {
+  border-color: #fff;
+  color: #fff;
+}
+.navbar-hero .nav-search-btn:hover {
+  background-color: #fff;
+  color: #000;
+}
+/* Toggler visibility on transparent BG */
+.navbar-hero .navbar-toggler { border-color: rgba(255,255,255,0.5); }
+.navbar-hero .navbar-toggler-icon { filter: invert(1); opacity: 0.9; }
+
+/* Shared nav link hover */
+.navbar .nav-link { transition: color 0.2s ease, opacity 0.2s ease; }
+.navbar .nav-link:hover { opacity: 0.8; }
+
+/* =========================================================
+   RESUME • Designed layout (masthead, sticky nav, timeline)
+   ========================================================= */
+.resume .card { border-radius: 14px; }
+
+.resume .resume-section-title {
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid #e9ecef;
+  font-weight: 600;
+  color: #2a6bb1;
+}
+
+.resume-masthead {
+  background: linear-gradient(135deg, #0d6efd0d 0%, #0d6efd1a 60%, #ffffff 100%);
+}
+
+/* Chips */
+.resume-chips .chip,
+.chip {
+  display: inline-block;
+  padding: .35rem .6rem;
+  border-radius: 999px;
+  font-size: .75rem;
+  line-height: 1;
+  background: #eef2ff;
+  color: #3b5bdb;
+  border: 1px solid #dbe4ff;
+}
+.chip-light {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  color: #0f172a;
+}
+
+/* Quick nav (sticky left rail) */
+.resume-quicknav {
+  position: sticky;
+  top: 90px; /* sits below navbar */
+}
+.resume-quicknav .list-group-item {
+  padding: .65rem .9rem;
+  border: none;
+  border-bottom: 1px solid #f0f2f4;
+}
+.resume-quicknav .list-group-item:last-child { border-bottom: none; }
+.resume-quicknav .list-group-item:hover { background: #f8fafc; }
+
+/* Timeline */
+.resume-timeline {
+  position: relative;
+  margin-left: .5rem;
+  padding-left: 1.25rem;
+}
+.resume-timeline::before {
+  content: "";
+  position: absolute;
+  top: .2rem; bottom: .2rem; left: .3rem;
+  width: 2px;
+  background: linear-gradient(#cbd5e1, #e2e8f0);
+}
+.resume-timeline-item {
+  position: relative;
+  padding-left: .75rem;
+  margin-bottom: 1.25rem;
+}
+.resume-timeline-item:last-child { margin-bottom: 0; }
+.resume-timeline-item::before {
+  content: "";
+  position: absolute;
+  left: -.1rem; top: .3rem;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 2px solid #0d6efd;
+  background: #fff;
+}
+.resume-tl-header .badge { font-weight: 600; }
+
+/* Lists */
+.resume-list { padding-left: 1.1rem; }
+.resume-list li { margin-bottom: .35rem; }
+
+/* =========================================================
+   PORTFOLIO • Widget panels + repo grid
+   ========================================================= */
+.portfolio { color: #1a1f2b; }
+
+/* Softer panel background for dashboard widgets */
+.portfolio-card {
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #ffffff 0%, #f9fafc 100%);
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+  color: #1b1e23;                     /* ensure strong text contrast */
+}
+.portfolio-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.75rem 1.25rem rgba(0, 0, 0, 0.07);
+}
+
+/* Panel headings (e.g., SYD lateness title) */
+.portfolio-card h2 {
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  color: #0b5ed7 !important;          /* vibrant but readable on light */
+  text-shadow: 0 0 2px rgba(255,255,255,0.4);
+}
+.portfolio-card h2::after {
+  content: "";
+  display: block;
+  width: 60px; height: 2px;
+  margin-top: 6px;
+  background: linear-gradient(90deg, #0b5ed7 0%, transparent 100%);
+  opacity: 0.7;
+}
+
+/* Increase contrast for helper text inside panels */
+.portfolio-card p,
+.portfolio-card .text-muted,
+.portfolio-card small {
+  color: #2b3035 !important;
+}
+
+/* Filter panel */
+.portfolio-filter {
+  background: #fff;
+  border-radius: 1rem;
+  border: 1px solid #e6e9ee;
+}
+.portfolio-filter input,
+.portfolio-filter select {
+  background: #f8f9fb;
+  border: 1px solid #dee2e6;
+}
+.portfolio-filter input:focus,
+.portfolio-filter select:focus {
+  background: #fff;
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.15);
+}
+
+/* Repo cards */
+.repo-card {
+  background: #fff;
+  border-radius: 0.75rem;
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+.repo-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0.75rem 1.25rem rgba(13, 27, 42, 0.08);
+}
+.repo-card .lang-badge {
+  font-size: 0.7rem;
+  padding: 0.4em 0.6em;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  text-transform: capitalize;
+  background: #f8fafc;
+}
+
+/* Language color accents (simple, readable chip palette) */
+.lang-badge.javascript { background-color: #fff3cd; border-color: #ffe69c; color: #856404; }
+.lang-badge.react, .lang-badge.jsx { background-color: #e0f7ff; border-color: #b3ecff; color: #055160; }
+.lang-badge.python { background-color: #d1ecf1; border-color: #bee5eb; color: #0c5460; }
+.lang-badge.html { background-color: #fdecea; border-color: #f5c6cb; color: #721c24; }
+.lang-badge.css { background-color: #e2e3ff; border-color: #cfd0ff; color: #383d8d; }
+.lang-badge.neutral { background: #f8f9fa; color: #6c757d; }
+
+/* Make muted text on the portfolio page more legible overall */
+.portfolio .text-muted,
+.portfolio p.small.text-muted { color: #495057 !important; }
+
+
