@@ -1,211 +1,202 @@
 // src/services/bitre.js
+// BITRE fetcher with 3 paths + month padding:
+// 1) CKAN JSON (GET + sort) via CRA proxy
+// 2) CSV download via CRA proxy (Papa Parse)
+// 3) CSV via public CORS helper (for prod without proxy)
+//
+// Export: fetchBitreLatest(limit = 5000, { scope = 'ALL' })
+//  - rows: per-airline rows (optionally filtered to Departing_Port = 'Sydney' when scope === 'SYD')
+//  - monthsAsc: [[key,label], ...] built from ALL rows, then PADDED to a continuous range
 
-// Primary local CSV (place bitre_otp_latest.csv in your /public folder)
-const LOCAL_CSV = "/bitre_otp_latest.csv";
+import Papa from 'papaparse';
 
-/** Fetch CSV text from /public with a final CORS-mirror fallback (rarely needed in dev). */
-async function fetchCsvText() {
-  try {
-    const r = await fetch(LOCAL_CSV, { cache: "no-store" });
-    if (r.ok) return await r.text();
-  } catch {}
-  // Fallback: mirror (should be unnecessary for /public, but left as a safety net)
-  const mirror = "https://cors.isomorphic-git.org/";
-  const url = LOCAL_CSV.startsWith("/") ? window.location.origin + LOCAL_CSV : LOCAL_CSV;
-  const r2 = await fetch(mirror + url, { cache: "no-store" });
-  if (!r2.ok) throw new Error("Could not load BITRE CSV");
-  return await r2.text();
+const RESOURCE_ID = 'cf663ed1-0c5e-497f-aea9-e74bfda9cf44';
+
+// Relative (proxied in dev via "proxy": "https://data.gov.au" in package.json)
+const CKAN_URL = `/data/api/action/datastore_search?resource_id=${RESOURCE_ID}&limit=5000&sort=Year%20desc,%20Month_Num%20desc`;
+const CSV_URL  = `/data/dataset/29128ebd-dbaa-4ff5-8b86-d9f30de56452/resource/${RESOURCE_ID}/download/otp_time_series_web.csv`;
+
+// Final fallback (adds permissive CORS headers for static/prod demos)
+const CORS_HELPER = (url) => `https://cors.isomorphic-git.org/${encodeURI(url)}`;
+
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const pad2 = (n) => String(n).padStart(2, '0');
+const num = (v) => {
+  if (v == null || v === '') return null;
+  if (typeof v === 'string') v = v.trim();
+  const n = typeof v === 'string' ? parseFloat(v.replace(/,/g, '')) : Number(v);
+  return Number.isFinite(n) ? n : null;
+};
+
+function monthFromRow(r) {
+  const y = num(r.Year);
+  const m = num(r.Month_Num);
+  if (y && m) return { key: `${y}-${pad2(m)}`, label: `${MON[m-1] || ''} ${y}` };
+  const s = (r.Month ?? '').toString().trim();
+  return { key: '', label: s };
 }
 
-/** Minimal CSV parser that handles quotes and commas inside quotes. */
-function parseCsv(text) {
-  const lines = text.replace(/\r/g, "").split("\n").filter(Boolean);
-  if (!lines.length) return { headers: [], rows: [] };
+// Prefer explicit average delay if present; otherwise derive a proxy from on-time ratio.
+function deriveAvgDelay(r) {
+  const explicit = num(r.Average_Delay) ?? num(r['Average Delay (mins)']);
+  if (explicit != null) return { value: explicit, explicit: true };
 
-  const split = (line) => {
-    const out = [];
-    let cur = "", inQ = false;
-    for (let i = 0; i < line.length; i++) {
-      const c = line[i];
-      if (c === '"') {
-        if (inQ && line[i + 1] === '"') { cur += '"'; i++; }
-        else inQ = !inQ;
-      } else if (c === "," && !inQ) {
-        out.push(cur);
-        cur = "";
-      } else {
-        cur += c;
-      }
-    }
-    out.push(cur);
-    return out;
-  };
+  const onTime = num(r.Departures_On_Time);
+  let delayed = num(r.Departures_Delayed);
+  const flown = num(r.Sectors_Flown);
 
-  const rawHeaders = split(lines[0]).map(h => h.trim());
-  const lower = rawHeaders.map(h => h.toLowerCase());
-  const rows = [];
+  if (delayed == null && flown != null && onTime != null) delayed = Math.max(0, flown - onTime);
 
-  for (let i = 1; i < lines.length; i++) {
-    const cols = split(lines[i]);
-    if (!cols.length) continue;
-    const obj = {};
-    for (let j = 0; j < lower.length; j++) {
-      obj[lower[j]] = (cols[j] ?? "").trim();
-    }
-    rows.push(obj);
+  let operated = null;
+  if (onTime != null && delayed != null) operated = onTime + delayed;
+  else if (flown != null) operated = flown;
+
+  if (operated && operated > 0 && onTime != null) {
+    const onTimePct = (onTime / operated) * 100;
+    const latePct = Math.max(0, Math.min(100, 100 - onTimePct));
+    return { value: +(15 * (latePct / 100)).toFixed(1), explicit: false };
   }
-
-  return { headers: rawHeaders, rows };
+  return { value: null, explicit: false };
 }
 
-/** Helper: get first non-empty property by alias list. */
-function get(o, aliases, def = "") {
-  for (const a of aliases) {
-    const v = o[a.toLowerCase()];
-    if (v !== undefined && v !== "") return v;
-  }
-  return def;
-}
-
-/**
- * Transform rows → {months, monthData} for Sydney departures.
- * - monthData[YYYY-MM] = [{ airline, avg_delay_min, flights, pct_delayed? }, ...]
- */
-function transformBitre(rows, depPort = "Sydney") {
-  // Header alias lists (include our normalized CSV names)
-  const colAirline = ["airline", "airline name", "carrier"];
-  const colDep = [
-    "departing_port", "departure port", "departure airport", "dep airport",
-    "from", "port of departure"
-  ];
-  const colArr = ["arriving_port", "arrival port", "arriving port", "to", "destination"];
-  const colMonth = ["month", "period", "reporting month", "year_month"];
-  const colOntime = [
-    "on_time_departures_pct",
-    "on time departures (%)",
-    "on-time departures (%)",
-    "on time departures percent",
-    "departures on time (%)"
-  ];
-  const colAvgDelay = [
-    "avg_departure_delay_mins",
-    "average departure delay (minutes)",
-    "avg departure delay (mins)",
-    "average departure delay (mins)",
-    "avg dep delay (min)"
-  ];
-  const colDepFlights = [
-    "sectors_flown",
-    "sectors flown",
-    "total departures",
-    "departures",
-    "number of departures"
-  ];
-
-  // Normalize Month → YYYY-MM
-  const normMonth = (s) => {
-    if (!s) return "";
-    const raw = (s + "").trim();
-    // Already YYYY-MM?
-    if (/^\d{4}-\d{2}$/.test(raw)) return raw;
-    // Parse with Date
-    const d = new Date(raw);
-    if (!Number.isNaN(d.getTime())) {
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, "0");
-      return `${y}-${m}`;
-    }
-    // Try formats like "Sep 2025" / "September 2025"
-    const year = (raw.match(/\b(19|20)\d{2}\b/) || [""])[0];
-    const monthNames = {
-      jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06",
-      jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12"
-    };
-    const m3 = raw.slice(0, 3).toLowerCase();
-    if (year && monthNames[m3]) return `${year}-${monthNames[m3]}`;
-    return raw; // last resort
-  };
-
-  // Gather months
-  const monthSet = new Set();
-  for (const r of rows) {
-    const m = normMonth(get(r, colMonth));
-    if (m) monthSet.add(m);
-  }
-  const months = Array.from(monthSet).sort(); // oldest → newest
-
-  // Aggregate by month → airline (departures from Sydney)
-  const byMonth = {};
-  for (const r of rows) {
-    const dep = get(r, colDep);
-    if (!dep || dep.toLowerCase() !== depPort.toLowerCase()) continue;
-
-    const m = normMonth(get(r, colMonth));
-    if (!m) continue;
-
-    const airline = get(r, colAirline) || "Unknown";
-    const onTimeStr = get(r, colOntime);
-    const avgDelayStr = get(r, colAvgDelay);
-    const flightsStr = get(r, colDepFlights);
-
-    const onTime = parseFloat((onTimeStr + "").replace("%", ""));
-    const avgDelay = parseFloat(avgDelayStr);
-    const flights = parseInt(flightsStr || "0", 10);
-
-    // Lateness preference: avg delay minutes if available; else proxy from on-time %
-    const lateness = Number.isFinite(avgDelay)
-      ? avgDelay
-      : (Number.isFinite(onTime) ? Math.max(0, 100 - onTime) : null);
-
-    if (lateness == null) continue;
-
-    byMonth[m] ||= {};
-    byMonth[m][airline] ||= { airline, sum: 0, n: 0, flights: 0, delayedFlights: 0 };
-
-    byMonth[m][airline].sum += lateness;
-    byMonth[m][airline].n += 1;
-    if (Number.isFinite(flights)) byMonth[m][airline].flights += flights;
-
-    if (Number.isFinite(onTime) && Number.isFinite(flights) && flights > 0) {
-      const delayed = Math.round((100 - onTime) / 100 * flights);
-      byMonth[m][airline].delayedFlights += delayed;
-    }
-  }
-
-  // Finalize averages per month/airline
-  const monthData = {};
-  for (const m of Object.keys(byMonth)) {
-    const arr = Object.values(byMonth[m]).map(a => {
-      const avg = a.sum / (a.n || 1);
-      const flights = a.flights || a.n; // fallback to row count
-      const pctDelayed = a.delayedFlights && flights ? (a.delayedFlights / flights) * 100 : undefined;
+// Per-airline normalisation (excludes "All Airlines"), optional SYD port filter.
+function normaliseAirlineRows(rows, scope = 'ALL') {
+  const wantSydney = scope === 'SYD';
+  return rows
+    .filter(r => {
+      const airline = (r.Airline ?? '').toString().trim();
+      if (!airline || airline === 'All Airlines') return false;
+      if (!wantSydney) return true;
+      // BITRE uses full city names, e.g., 'Sydney'
+      return (r.Departing_Port ?? '').toString().trim() === 'Sydney';
+    })
+    .map(r => {
+      const airline = r.Airline.toString().trim();
+      const { key, label } = monthFromRow(r);
+      const { value, explicit } = deriveAvgDelay(r);
       return {
-        airline: a.airline,
-        avg_delay_min: Math.round(avg * 10) / 10,
-        flights,
-        pct_delayed: pctDelayed != null ? Math.round(pctDelayed * 10) / 10 : undefined,
+        monthKey: key,
+        monthLabel: label,
+        airline,
+        airportCode: wantSydney ? 'SYD' : '',
+        airportName: wantSydney ? 'Sydney (Departures)' : '',
+        avg_delay: value,
+        _hasExplicitDelay: explicit,
+        raw: r,
       };
     });
-    // Keep only reasonable sample sizes
-    monthData[m] = arr.filter(x => x.flights >= 3).sort((x, y) => y.avg_delay_min - x.avg_delay_min);
+}
+
+// Helper to step month-by-month
+function stepMonths(y, m) {
+  m += 1;
+  if (m > 12) { m = 1; y += 1; }
+  return [y, m];
+}
+
+// Build month dropdown from ALL rows, then PAD to a continuous range (latest 24 kept).
+function collectMonthsAscFromAllRows(allRows) {
+  const labelMap = new Map(); // key -> label
+  for (const r of allRows) {
+    const { key, label } = monthFromRow(r);
+    const k = key || label;
+    const v = label || key;
+    if (k) labelMap.set(k, v);
   }
 
-  return { months, monthData, source: "BITRE" };
+  // Get normalized YYYY-MM keys
+  const yymm = Array.from(labelMap.keys()).filter(k => /^\d{4}-\d{2}$/.test(k));
+  if (yymm.length === 0) {
+    // Fallback: no normalized keys, just return latest 24 distinct labels
+    const desc = Array.from(labelMap.entries()).sort((a,b)=> (b[0] > a[0] ? 1 : -1));
+    const latest24 = desc.slice(0, 24);
+    latest24.sort((a,b)=> (a[0] > b[0] ? 1 : -1));
+    return latest24;
+  }
+
+  yymm.sort(); // asc
+  const minKey = yymm[0];
+  const maxKey = yymm[yymm.length - 1];
+
+  const [minY, minM] = minKey.split('-').map(Number);
+  const [maxY, maxM] = maxKey.split('-').map(Number);
+
+  // Generate continuous range min..max
+  const padded = [];
+  let y = minY, m = minM;
+  while (y < maxY || (y === maxY && m <= maxM)) {
+    const key = `${y}-${pad2(m)}`;
+    const label = labelMap.get(key) || `${MON[m-1]} ${y}`;
+    padded.push([key, label]);
+    [y, m] = stepMonths(y, m);
+  }
+
+  // Keep only latest 24 months for a compact UI
+  const latest24 = padded.slice(Math.max(0, padded.length - 24));
+  return latest24;
 }
 
-/** Public: load and transform the local CSV into { months, monthData, source }. */
-export async function loadBitreOtp() {
-  const csv = await fetchCsvText();
-  const { rows } = parseCsv(csv);
-  return transformBitre(rows, "Sydney"); // departures from Sydney
+// Keep only latest 24 months in per-airline rows; output ASC for UI.
+function keepLatest24MonthsAsc(records) {
+  const desc = [...records].sort((a,b) => (b.monthKey > a.monthKey ? 1 : b.monthKey < a.monthKey ? -1 : 0));
+  const monthsDesc = Array.from(new Set(desc.map(r => r.monthKey).filter(Boolean)));
+  const latestSet = new Set(monthsDesc.slice(0, 24));
+  const trimmed = desc.filter(r => !r.monthKey || latestSet.has(r.monthKey));
+  trimmed.sort((a,b) => (a.monthKey > b.monthKey ? 1 : -1));
+  return trimmed;
 }
 
-/**
- * Backwards-compatible helper:
- * Returns { month, items, source } for the latest month only (same shape as your mock).
- */
-export async function fetchSydLatenessLatestMonth() {
-  const { months, monthData, source } = await loadBitreOtp();
-  const latest = months[months.length - 1];
-  return { month: latest, items: monthData[latest] || [], source };
+// ---- CKAN JSON via proxy ----
+async function fetchViaJson(scope) {
+  const res = await fetch(CKAN_URL, { method: 'GET' });
+  if (!res.ok) throw new Error(`CKAN GET failed (${res.status})`);
+  const data = await res.json();
+  if (!data.success || !data.result) throw new Error('CKAN JSON unsuccessful');
+
+  const allRowsRaw = data.result.records || [];
+  const monthsAsc = collectMonthsAscFromAllRows(allRowsRaw);
+  const airlineRows = normaliseAirlineRows(allRowsRaw, scope);
+  const rows = keepLatest24MonthsAsc(airlineRows);
+
+  return { rows, monthsAsc };
 }
+
+// ---- CSV via proxy (Papa Parse) ----
+async function fetchViaCsv(url = CSV_URL, scope) {
+  const res = await fetch(url, { method: 'GET' });
+  if (!res.ok) throw new Error(`CSV fetch failed (${res.status})`);
+  const csv = await res.text();
+
+  const parsed = Papa.parse(csv, { header: true, dynamicTyping: false, skipEmptyLines: true });
+  if (parsed.errors?.length) {
+    throw new Error(`CSV parse error: ${parsed.errors[0].message || 'unknown'}`);
+  }
+
+  const allRowsRaw = parsed.data || [];
+  const monthsAsc = collectMonthsAscFromAllRows(allRowsRaw);
+  const airlineRows = normaliseAirlineRows(allRowsRaw, scope);
+  const rows = keepLatest24MonthsAsc(airlineRows);
+
+  return { rows, monthsAsc };
+}
+
+// PUBLIC API with scope + 3-step fallback
+export async function fetchBitreLatest(limit = 5000, { scope = 'ALL' } = {}) {
+  try {
+    const { rows, monthsAsc } = await fetchViaJson(scope);
+    return { rows: rows.slice(0, Math.min(limit, rows.length)), monthsAsc };
+  } catch {
+    try {
+      const { rows, monthsAsc } = await fetchViaCsv(CSV_URL, scope);
+      return { rows: rows.slice(0, Math.min(limit, rows.length)), monthsAsc };
+    } catch {
+      // Final fallback using public CORS helper (works even without CRA proxy)
+      const rawUrl = 'https://data.gov.au/data/dataset/29128ebd-dbaa-4ff5-8b86-d9f30de56452/resource/cf663ed1-0c5e-497f-aea9-e74bfda9cf44/download/otp_time_series_web.csv';
+      const { rows, monthsAsc } = await fetchViaCsv(CORS_HELPER(rawUrl), scope);
+      return { rows: rows.slice(0, Math.min(limit, rows.length)), monthsAsc };
+    }
+  }
+}
+
+
+

@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 
 export default function Resume() {
   useEffect(() => {
-    document.title = "Résumé • CHRISCV";
+    document.title = "Chris Bargh";
   }, []);
 
   return (

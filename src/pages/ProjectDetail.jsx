@@ -10,11 +10,12 @@ export default function ProjectDetail() {
   const [repo, setRepo] = useState(null);
   const [error, setError] = useState('');
 
-  // Set initial title
+  // Initial title
   useEffect(() => {
     document.title = `${name} • CHRISCV`;
   }, [name]);
 
+  // Load repo details
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -32,28 +33,30 @@ export default function ProjectDetail() {
     return () => { alive = false; };
   }, [name]);
 
+  // ---- Error state ----
   if (error) {
     return (
-      <main className="container py-4">
+      <main className="project-detail theme-tech container-xl py-5">
         <nav className="mb-3">
-          <Link to="/portfolio" className="link-secondary">← Back to Portfolio</Link>
+          <Link to="/portfolio" className="link-80s">← Back to Portfolio</Link>
         </nav>
-        <div className="alert alert-warning" role="alert">
+        <div className="alert alert-80s" role="alert">
           {error}
         </div>
       </main>
     );
   }
 
+  // ---- Loading state ----
   if (!repo) {
     return (
-      <main className="container py-4">
+      <main className="project-detail theme-tech container-xl py-5">
         <nav className="mb-3">
-          <Link to="/portfolio" className="link-secondary">← Back to Portfolio</Link>
+          <Link to="/portfolio" className="link-80s">← Back to Portfolio</Link>
         </nav>
         <div className="placeholder-glow">
-          <h1 className="h3 mb-3"><span className="placeholder col-6"></span></h1>
-          <div className="card border-0 shadow-sm">
+          <h1 className="neon-title mb-3"><span className="placeholder col-6"></span></h1>
+          <div className="card portfolio-card dark border-0">
             <div className="card-body">
               <p className="placeholder col-8 mb-2"></p>
               <p className="placeholder col-5 mb-2"></p>
@@ -65,47 +68,50 @@ export default function ProjectDetail() {
     );
   }
 
+  // ---- Ready ----
   return (
-    <main className="container py-4">
+    <main className="project-detail theme-tech container-xl py-5">
       <nav className="mb-3">
-        <Link to="/portfolio" className="link-secondary">← Back to Portfolio</Link>
+        <Link to="/portfolio" className="link-80s">← Back to Portfolio</Link>
       </nav>
 
       {/* Header */}
       <header className="mb-3">
-        <h1 className="h3 mb-1">{repo.name}</h1>
-        <p className="text-muted mb-0">{repo.description || 'No description'}</p>
+        <h1 className="neon-title mb-2">{repo.name}</h1>
+        <p className="muted-80s mb-0">{repo.description || 'No description'}</p>
       </header>
 
-      {/* Meta / Stats */}
-      <div className="row g-3">
+      <div className="row g-4">
+        {/* Main panel */}
         <div className="col-12 col-lg-8">
-          <div className="card border-0 shadow-sm h-100">
+          <div className="card portfolio-card dark h-100 border-0">
             <div className="card-body">
-              <div className="d-flex flex-wrap gap-2 mb-3">
-                <span className="badge text-bg-light border">
+              <h2 className="panel-title mb-3">Repository Details</h2>
+
+              <div className="d-flex flex-wrap gap-2 mb-4">
+                <span className="badge lang-badge neutral">
                   {repo.language || 'Unspecified'}
                 </span>
-                <span className="badge text-bg-light border">
+                <span className="badge lang-badge neutral">
                   ⭐ Stars: {repo.stars ?? repo.stargazers_count ?? 0}
                 </span>
-                <span className="badge text-bg-light border">
+                <span className="badge lang-badge neutral">
                   🍴 Forks: {repo.forks ?? 0}
                 </span>
-                <span className="badge text-bg-light border">
+                <span className="badge lang-badge neutral">
                   ❗ Issues: {repo.open_issues ?? 0}
                 </span>
-                <span className="badge text-bg-light border">
+                <span className="badge lang-badge neutral">
                   Branch: {repo.default_branch || 'main'}
                 </span>
               </div>
 
-              <div className="d-flex flex-wrap gap-2">
+              <div className="d-flex flex-wrap gap-3">
                 <a
                   href={repo.html_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="btn btn-primary btn-sm"
+                  className="btn btn-ghost-80s"
                   aria-label={`Open ${repo.name} on GitHub`}
                 >
                   View on GitHub ↗
@@ -115,9 +121,9 @@ export default function ProjectDetail() {
                     href={repo.homepage}
                     target="_blank"
                     rel="noreferrer"
-                    className="btn btn-outline-secondary btn-sm"
+                    className="btn btn-ghost-80s"
                   >
-                    Project site ↗
+                    Project Site ↗
                   </a>
                 )}
               </div>
@@ -125,17 +131,20 @@ export default function ProjectDetail() {
           </div>
         </div>
 
-        {/* Sidebar meta */}
+        {/* Sidebar */}
         <div className="col-12 col-lg-4">
-          <div className="card border-0 shadow-sm h-100">
+          <div className="card portfolio-card dark h-100 border-0">
             <div className="card-body">
+              <h2 className="panel-title mb-3">Metadata</h2>
+
               {repo.license && (
-                <p className="text-muted mb-2">
-                  <span className="fw-semibold">License:</span> {repo.license}
+                <p className="muted-80s mb-2">
+                  <span className="fw-semibold" style={{ color: 'var(--tech-accent)' }}>License:</span>{' '}
+                  {repo.license}
                 </p>
               )}
-              <p className="text-muted mb-0">
-                <span className="fw-semibold">Last updated:</span>{' '}
+              <p className="muted-80s mb-0">
+                <span className="fw-semibold" style={{ color: 'var(--tech-accent)' }}>Last updated:</span>{' '}
                 {repo.updated_at ? new Date(repo.updated_at).toLocaleString() : '—'}
               </p>
             </div>

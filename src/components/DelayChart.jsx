@@ -1,108 +1,108 @@
-import { useEffect, useMemo, useState } from "react";
-import { Bar } from "react-chartjs-2";
-import {
-  Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip, Title, Legend,
-} from "chart.js";
-import { loadBitreOtp } from "../services/bitre";
-
-ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Title, Legend);
+import { useEffect, useMemo, useState } from 'react';
+import { fetchBitreLatest } from '../services/bitre';
 
 export default function DelayChart() {
-  const [status, setStatus] = useState("Loading…");
-  const [months, setMonths] = useState([]);
-  const [monthData, setMonthData] = useState({});
-  const [selectedMonth, setSelectedMonth] = useState("");
-  const [filter, setFilter] = useState("");
+  const [records, setRecords] = useState([]);
+  const [monthsAsc, setMonthsAsc] = useState([]);
+  const [month, setMonth] = useState('');
+  const [airline, setAirline] = useState('');
+  const [scope, setScope] = useState('SYD'); // default to SYD for your brief
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [usingProxy, setUsingProxy] = useState(false);
 
   useEffect(() => {
     let alive = true;
+    setLoading(true);
     (async () => {
       try {
-        const { months, monthData } = await loadBitreOtp();
+        const { rows, monthsAsc } = await fetchBitreLatest(5000, { scope });
         if (!alive) return;
-        setMonths(months);
-        setMonthData(monthData);
-        setSelectedMonth(months[months.length - 1]); // latest month
-        setStatus("OK");
+        setRecords(rows);
+        setMonthsAsc(monthsAsc);
+        setUsingProxy(rows.some(r => !r._hasExplicitDelay));
+        if (monthsAsc && monthsAsc.length) setMonth(monthsAsc[monthsAsc.length - 1][0]);
+        setError('');
       } catch (e) {
-        console.error(e);
         if (!alive) return;
-        setStatus("Error loading BITRE data");
+        setError(e?.message || 'Could not load BITRE lateness data.');
+      } finally {
+        if (alive) setLoading(false);
       }
     })();
     return () => { alive = false; };
-  }, []);
+  }, [scope]);
 
-  const items = useMemo(() => {
-    const arr = monthData[selectedMonth] || [];
-    const f = filter.trim().toLowerCase();
-    return f ? arr.filter(i => i.airline.toLowerCase().includes(f)) : arr;
-  }, [monthData, selectedMonth, filter]);
+  const dataset = useMemo(() => {
+    const monthRows = records.filter(r => (r.monthKey || r.monthLabel) === month);
+    const groups = new Map();
+    for (const r of monthRows) {
+      const key = (r.airline || '').trim();
+      if (!key) continue;
+      const val = Number.isFinite(r.avg_delay) ? r.avg_delay : null;
+      if (!groups.has(key)) groups.set(key, { airline: key, delays: [] });
+      if (val !== null) groups.get(key).delays.push(val);
+    }
+    let grouped = Array.from(groups.values()).map(g => ({
+      airline: g.airline,
+      avg_delay: g.delays.length ? g.delays.reduce((a,b)=>a+b,0)/g.delays.length : null
+    }));
+    if (airline.trim()) {
+      const needle = airline.trim().toLowerCase();
+      grouped = grouped.filter(g => g.airline.toLowerCase().includes(needle));
+    }
+    grouped.sort((a,b) => (b.avg_delay ?? -1) - (a.avg_delay ?? -1));
+    return grouped;
+  }, [records, month, airline]);
 
-  if (status !== "OK") return <div style={{ padding: 8, color: "#64748b" }}>{status}</div>;
+  if (loading) return <div className="placeholder-glow"><div className="placeholder col-6 mb-2"></div><div className="placeholder col-8"></div></div>;
+  if (error) return <div className="alert alert-warning">{error}</div>;
 
-  const labels = items.map(i => i.airline);
-  const mins = items.map(i => i.avg_delay_min);
-  const flights = items.map(i => i.flights);
-  const pct = items.map(i => i.pct_delayed);
-
-  const chartData = {
-    labels,
-    datasets: [{
-      label: `Avg delay (mins) — ${selectedMonth}`,
-      data: mins,
-      backgroundColor: "rgba(255,255,255,0.4)",
-    }]
-  };
-
-  const options = {
-    responsive: true,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: (ctx) => {
-            const i = ctx.dataIndex;
-            return [
-              `Avg delay: ${mins[i]} min`,
-              `Flights: ${flights[i]}`,
-              ...(pct[i] != null ? [`% delayed: ${pct[i]}%`] : []),
-            ];
-          }
-        }
-      }
-    },
-    scales: { y: { beginAtZero: true, title: { display: true, text: "Minutes late (avg)" } } }
-  };
+  const noAirlineRowsThisMonth = dataset.length === 0 && monthsAsc.length > 0;
 
   return (
-    <div style={{ padding: 16, borderRadius: 12, background: "#0b1220", color: "#e5e7eb" }}>
-      <div style={{ display: "grid", gap: 8, gridTemplateColumns: "1fr", marginBottom: 8 }}>
-        <h3 style={{ margin: 0 }}>SYD — Average lateness by airline (monthly)</h3>
-        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <label style={{ fontSize: 14, color: "#94a3b8" }}>
-            Month:&nbsp;
-            <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
-              {months.map(m => <option key={m} value={m}>{m}</option>)}
-            </select>
-          </label>
-          <label style={{ fontSize: 14, color: "#94a3b8" }}>
-            Airline filter:&nbsp;
-            <input
-              placeholder="e.g. Qantas"
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              style={{ padding: "6px 8px", borderRadius: 6, border: "1px solid #334155",
-                       background: "#0f172a", color: "#e5e7eb" }}
-            />
-          </label>
+    <div>
+      {/* Controls */}
+      <div className="row g-2 align-items-end mb-3">
+        <div className="col-12 col-md-3">
+          <label className="form-label">Scope:</label>
+          <select className="form-select" value={scope} onChange={e => setScope(e.target.value)}>
+            <option value="SYD">SYD (Departures)</option>
+            <option value="ALL">All Ports</option>
+          </select>
+        </div>
+        <div className="col-12 col-md-4">
+          <label className="form-label">Month:</label>
+          <select className="form-select" value={month} onChange={e => setMonth(e.target.value)}>
+            {monthsAsc.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+          </select>
+        </div>
+        <div className="col-12 col-md-5">
+          <label className="form-label">Airline filter:</label>
+          <input className="form-control" placeholder="e.g. Qantas" value={airline} onChange={e => setAirline(e.target.value)} />
         </div>
       </div>
-      <Bar data={chartData} options={options} height={120} />
-      <p style={{ fontSize: 12, color: "#94a3b8", marginTop: 8 }}>
-        Lateness uses BITRE monthly on-time performance for departures from Sydney (SYD).
-        Shows average departure delay (mins) when available; else a proxy derived from on-time %.
-        Only airlines with ≥3 flights shown.
+
+      {/* Output */}
+      {dataset.length === 0 ? (
+        <div className="alert alert-light border">
+          {noAirlineRowsThisMonth
+            ? 'No per-airline breakdown published for this month yet.'
+            : 'No records for the selected filters.'}
+        </div>
+      ) : (
+        <ul className="list-group">
+          {dataset.slice(0, 30).map((g, i) => (
+            <li key={`${g.airline}-${i}`} className="list-group-item d-flex justify-content-between">
+              <span>{g.airline}</span>
+              <span className="text-muted">{Number.isFinite(g.avg_delay) ? `${g.avg_delay.toFixed(1)} mins` : '—'}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <p className="form-text mt-2">
+        Source: BITRE (Data.gov.au). Averages derived from on-time vs operated counts when explicit delay is unavailable.
       </p>
     </div>
   );

@@ -8,9 +8,7 @@ import LiveFlightsList from '../components/LiveFlightsList';
 const GITHUB_USER = 'chrisbargh88';
 
 export default function Portfolio() {
-  useEffect(() => {
-    document.title = 'Portfolio • CHRISCV';
-  }, []);
+  useEffect(() => { document.title = 'Chris Bargh'; }, []);
 
   const [repos, setRepos] = useState([]);
   const [q, setQ] = useState('');
@@ -29,20 +27,8 @@ export default function Portfolio() {
         if (!alive) return;
         setError(err?.message || 'Could not load GitHub repositories.');
         setRepos([
-          {
-            id: 1,
-            name: 'api-projects-demo',
-            description: 'Demo portfolio card (fallback)',
-            language: 'JavaScript',
-            html_url: `https://github.com/${GITHUB_USER}`,
-          },
-          {
-            id: 2,
-            name: 'chris-resume-site',
-            description: 'Personal site scaffold (fallback)',
-            language: 'React',
-            html_url: `https://github.com/${GITHUB_USER}`,
-          },
+          { id: 1, name: 'api-projects-demo', description: 'Demo portfolio card (fallback)', language: 'JavaScript', html_url: `https://github.com/${GITHUB_USER}` },
+          { id: 2, name: 'chris-resume-site', description: 'Personal site scaffold (fallback)', language: 'React', html_url: `https://github.com/${GITHUB_USER}` },
         ]);
       }
     })();
@@ -67,29 +53,27 @@ export default function Portfolio() {
   }, [repos, q, lang]);
 
   return (
-    <main className="portfolio container-xl py-5">
+    <main className="portfolio theme-tech container-xl py-5">
       {/* Header */}
       <header className="mb-4 text-center">
-        <h1 className="display-6 fw-semibold mb-1">Portfolio</h1>
-        <p className="text-secondary mb-0">
-          Live aviation analytics & personal GitHub projects — blending workflow, data, and automation.
-        </p>
+        <h1 className="neon-title mb-1">Portfolio</h1>
+        <p className="muted-80s mb-0">Live aviation analytics & GitHub projects — workflow • data • automation</p>
       </header>
 
       {/* API widgets */}
       <div className="row g-4 mb-4">
         <div className="col-12 col-lg-6">
-          <div className="card portfolio-card h-100">
+          <div className="card portfolio-card dark h-100">
             <div className="card-body">
-              <h2 className="h6 text-uppercase text-primary mb-3">Live Flights (OpenSky)</h2>
+              <h2 className="panel-title mb-3">Live Flights (OpenSky)</h2>
               <LiveFlightsStat />
             </div>
           </div>
         </div>
         <div className="col-12 col-lg-6">
-          <div className="card portfolio-card h-100">
+          <div className="card portfolio-card dark h-100">
             <div className="card-body">
-              <h2 className="h6 text-uppercase text-primary mb-3">SYD — Average Lateness (Monthly)</h2>
+              <h2 className="panel-title mb-3">SYD — Average Lateness (Monthly)</h2>
               <DelayChart />
             </div>
           </div>
@@ -97,20 +81,20 @@ export default function Portfolio() {
       </div>
 
       {/* Live flights list */}
-      <div className="card portfolio-card mb-5">
+      <div className="card portfolio-card dark mb-5">
         <div className="card-body">
-          <h2 className="h6 text-uppercase text-primary mb-3">Live Flight Data (Detail)</h2>
+          <h2 className="panel-title mb-3">Live Flight Data (Detail)</h2>
           <LiveFlightsList />
         </div>
       </div>
 
       {/* Search + Filters */}
-      <div className="portfolio-filter card border-0 shadow-sm mb-4">
+      <div className="portfolio-filter dark card border-0 mb-4">
         <div className="card-body">
           <form className="row g-2 align-items-center" onSubmit={e => e.preventDefault()}>
             <div className="col-12 col-md">
               <input
-                className="form-control form-control-lg"
+                className="form-control form-control-lg tech-input"
                 placeholder="Search projects…"
                 value={q}
                 onChange={e => setQ(e.target.value)}
@@ -118,7 +102,7 @@ export default function Portfolio() {
             </div>
             <div className="col-12 col-md-auto">
               <select
-                className="form-select form-select-lg"
+                className="form-select form-select-lg tech-input"
                 value={lang}
                 onChange={e => setLang(e.target.value)}
               >
@@ -128,7 +112,7 @@ export default function Portfolio() {
             <div className="col-12 col-md-auto d-grid">
               <button
                 type="button"
-                className="btn btn-outline-secondary btn-lg"
+                className="btn btn-ghost-80s btn-lg"
                 onClick={() => { setQ(''); setLang('all'); }}
               >
                 Reset
@@ -140,32 +124,32 @@ export default function Portfolio() {
 
       {/* Error */}
       {error && (
-        <div className="alert alert-warning mb-4" role="alert">
+        <div className="alert alert-80s mb-4" role="alert">
           <strong>Heads up:</strong> {error}
-          <div className="small text-muted mt-1">
+          <div className="small mt-1">
             Unauthenticated GitHub calls can be rate-limited (~60/hour). Fallback cards are shown.
           </div>
         </div>
       )}
 
       {/* GitHub Repos */}
-      <h2 className="h5 mb-3">GitHub Projects</h2>
+      <h2 className="section-subtitle mb-3">GitHub Projects</h2>
       <div className="row g-4">
         {filtered.map(repo => (
           <div key={repo.id} className="col-12 col-md-6 col-lg-4">
-            <div className="card repo-card h-100 border-0 shadow-sm">
+            <div className="card repo-card dark h-100 border-0">
               <div className="card-body d-flex flex-column">
                 <h3 className="h6 fw-semibold mb-1">
-                  <Link to={`/portfolio/${repo.name}`} className="link-dark text-decoration-none">
+                  <Link to={`/portfolio/${repo.name}`} className="link-80s text-decoration-none">
                     {repo.name}
                   </Link>
                 </h3>
-                <p className="small text-muted flex-grow-1 mb-3">{repo.description || 'No description'}</p>
+                <p className="small muted-80s flex-grow-1 mb-3">{repo.description || 'No description'}</p>
                 <div className="d-flex justify-content-between align-items-center mt-auto">
                   <span className={`badge lang-badge ${repo.language?.toLowerCase() || 'neutral'}`}>
                     {repo.language || 'Unspecified'}
                   </span>
-                  <a href={repo.html_url} target="_blank" rel="noreferrer" className="small link-secondary">
+                  <a href={repo.html_url} target="_blank" rel="noreferrer" className="small link-80s-subtle">
                     GitHub ↗
                   </a>
                 </div>
@@ -175,7 +159,7 @@ export default function Portfolio() {
         ))}
         {filtered.length === 0 && (
           <div className="col-12">
-            <div className="alert alert-light border">No matching projects — try resetting filters.</div>
+            <div className="alert alert-80s border-0">No matching projects — try resetting filters.</div>
           </div>
         )}
       </div>

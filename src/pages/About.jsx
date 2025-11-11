@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 export default function About() {
   useEffect(() => {
-    document.title = 'About • CHRISCV';
+    document.title = 'Chris Bargh';
   }, []);
 
   return (

@@ -11,7 +11,7 @@ export default function Home() {
             Résumé
           </Link>
           <Link to="/portfolio" className="btn btn-outline-light btn-lg px-4">
-            Portfolio
+            API Portfolio
           </Link>
         </div>
       </div>
