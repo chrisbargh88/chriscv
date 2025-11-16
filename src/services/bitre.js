@@ -1,8 +1,8 @@
 // src/services/bitre.js
 // BITRE fetcher with 3 paths + month padding:
-// 1) CKAN JSON (GET + sort) via CRA proxy
-// 2) CSV download via CRA proxy (Papa Parse)
-// 3) CSV via public CORS helper (for prod without proxy)
+// 1) CKAN JSON (GET + sort) via CRA proxy (dev)
+// 2) CSV download via CRA proxy (dev, Papa Parse)
+// 3) CSV via public CORS helper (prod / when proxy not available)
 //
 // Export: fetchBitreLatest(limit = 5000, { scope = 'ALL' })
 //  - rows: per-airline rows (optionally filtered to Departing_Port = 'Sydney' when scope === 'SYD')
@@ -16,8 +16,9 @@ const RESOURCE_ID = 'cf663ed1-0c5e-497f-aea9-e74bfda9cf44';
 const CKAN_URL = `/data/api/action/datastore_search?resource_id=${RESOURCE_ID}&limit=5000&sort=Year%20desc,%20Month_Num%20desc`;
 const CSV_URL  = `/data/dataset/29128ebd-dbaa-4ff5-8b86-d9f30de56452/resource/${RESOURCE_ID}/download/otp_time_series_web.csv`;
 
-// Final fallback (adds permissive CORS headers for static/prod demos)
-const CORS_HELPER = (url) => `https://cors.isomorphic-git.org/${encodeURI(url)}`;
+// Final fallback helper using AllOrigins (CORS-safe for static/prod)
+const CORS_HELPER = (url) =>
+  `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
 
 const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const pad2 = (n) => String(n).padStart(2, '0');
@@ -45,7 +46,9 @@ function deriveAvgDelay(r) {
   let delayed = num(r.Departures_Delayed);
   const flown = num(r.Sectors_Flown);
 
-  if (delayed == null && flown != null && onTime != null) delayed = Math.max(0, flown - onTime);
+  if (delayed == null && flown != null && onTime != null) {
+    delayed = Math.max(0, flown - onTime);
+  }
 
   let operated = null;
   if (onTime != null && delayed != null) operated = onTime + delayed;
@@ -54,6 +57,7 @@ function deriveAvgDelay(r) {
   if (operated && operated > 0 && onTime != null) {
     const onTimePct = (onTime / operated) * 100;
     const latePct = Math.max(0, Math.min(100, 100 - onTimePct));
+    // Heuristic: scale lateness against a nominal 15-minute window
     return { value: +(15 * (latePct / 100)).toFixed(1), explicit: false };
   }
   return { value: null, explicit: false };
@@ -63,14 +67,14 @@ function deriveAvgDelay(r) {
 function normaliseAirlineRows(rows, scope = 'ALL') {
   const wantSydney = scope === 'SYD';
   return rows
-    .filter(r => {
+    .filter((r) => {
       const airline = (r.Airline ?? '').toString().trim();
       if (!airline || airline === 'All Airlines') return false;
       if (!wantSydney) return true;
       // BITRE uses full city names, e.g., 'Sydney'
       return (r.Departing_Port ?? '').toString().trim() === 'Sydney';
     })
-    .map(r => {
+    .map((r) => {
       const airline = r.Airline.toString().trim();
       const { key, label } = monthFromRow(r);
       const { value, explicit } = deriveAvgDelay(r);
@@ -90,7 +94,10 @@ function normaliseAirlineRows(rows, scope = 'ALL') {
 // Helper to step month-by-month
 function stepMonths(y, m) {
   m += 1;
-  if (m > 12) { m = 1; y += 1; }
+  if (m > 12) {
+    m = 1;
+    y += 1;
+  }
   return [y, m];
 }
 
@@ -105,12 +112,12 @@ function collectMonthsAscFromAllRows(allRows) {
   }
 
   // Get normalized YYYY-MM keys
-  const yymm = Array.from(labelMap.keys()).filter(k => /^\d{4}-\d{2}$/.test(k));
+  const yymm = Array.from(labelMap.keys()).filter((k) => /^\d{4}-\d{2}$/.test(k));
   if (yymm.length === 0) {
     // Fallback: no normalized keys, just return latest 24 distinct labels
-    const desc = Array.from(labelMap.entries()).sort((a,b)=> (b[0] > a[0] ? 1 : -1));
+    const desc = Array.from(labelMap.entries()).sort((a, b) => (b[0] > a[0] ? 1 : -1));
     const latest24 = desc.slice(0, 24);
-    latest24.sort((a,b)=> (a[0] > b[0] ? 1 : -1));
+    latest24.sort((a, b) => (a[0] > b[0] ? 1 : -1));
     return latest24;
   }
 
@@ -123,10 +130,11 @@ function collectMonthsAscFromAllRows(allRows) {
 
   // Generate continuous range min..max
   const padded = [];
-  let y = minY, m = minM;
+  let y = minY;
+  let m = minM;
   while (y < maxY || (y === maxY && m <= maxM)) {
     const key = `${y}-${pad2(m)}`;
-    const label = labelMap.get(key) || `${MON[m-1]} ${y}`;
+    const label = labelMap.get(key) || `${MON[m - 1]} ${y}`;
     padded.push([key, label]);
     [y, m] = stepMonths(y, m);
   }
@@ -138,11 +146,13 @@ function collectMonthsAscFromAllRows(allRows) {
 
 // Keep only latest 24 months in per-airline rows; output ASC for UI.
 function keepLatest24MonthsAsc(records) {
-  const desc = [...records].sort((a,b) => (b.monthKey > a.monthKey ? 1 : b.monthKey < a.monthKey ? -1 : 0));
-  const monthsDesc = Array.from(new Set(desc.map(r => r.monthKey).filter(Boolean)));
+  const desc = [...records].sort((a, b) =>
+    b.monthKey > a.monthKey ? 1 : b.monthKey < a.monthKey ? -1 : 0
+  );
+  const monthsDesc = Array.from(new Set(desc.map((r) => r.monthKey).filter(Boolean)));
   const latestSet = new Set(monthsDesc.slice(0, 24));
-  const trimmed = desc.filter(r => !r.monthKey || latestSet.has(r.monthKey));
-  trimmed.sort((a,b) => (a.monthKey > b.monthKey ? 1 : -1));
+  const trimmed = desc.filter((r) => !r.monthKey || latestSet.has(r.monthKey));
+  trimmed.sort((a, b) => (a.monthKey > b.monthKey ? 1 : -1));
   return trimmed;
 }
 
@@ -161,15 +171,21 @@ async function fetchViaJson(scope) {
   return { rows, monthsAsc };
 }
 
-// ---- CSV via proxy (Papa Parse) ----
+// ---- CSV via proxy or public URL (Papa Parse) ----
 async function fetchViaCsv(url = CSV_URL, scope) {
   const res = await fetch(url, { method: 'GET' });
   if (!res.ok) throw new Error(`CSV fetch failed (${res.status})`);
   const csv = await res.text();
 
-  const parsed = Papa.parse(csv, { header: true, dynamicTyping: false, skipEmptyLines: true });
+  const parsed = Papa.parse(csv, {
+    header: true,
+    dynamicTyping: false,
+    skipEmptyLines: true,
+  });
   if (parsed.errors?.length) {
-    throw new Error(`CSV parse error: ${parsed.errors[0].message || 'unknown'}`);
+    throw new Error(
+      `CSV parse error: ${parsed.errors[0].message || 'unknown'}`
+    );
   }
 
   const allRowsRaw = parsed.data || [];
@@ -183,20 +199,24 @@ async function fetchViaCsv(url = CSV_URL, scope) {
 // PUBLIC API with scope + 3-step fallback
 export async function fetchBitreLatest(limit = 5000, { scope = 'ALL' } = {}) {
   try {
+    // 1) CKAN JSON via CRA proxy (dev)
     const { rows, monthsAsc } = await fetchViaJson(scope);
     return { rows: rows.slice(0, Math.min(limit, rows.length)), monthsAsc };
   } catch {
     try {
+      // 2) CSV via CRA proxy (dev)
       const { rows, monthsAsc } = await fetchViaCsv(CSV_URL, scope);
       return { rows: rows.slice(0, Math.min(limit, rows.length)), monthsAsc };
     } catch {
-      // Final fallback using public CORS helper (works even without CRA proxy)
-      const rawUrl = 'https://data.gov.au/data/dataset/29128ebd-dbaa-4ff5-8b86-d9f30de56452/resource/cf663ed1-0c5e-497f-aea9-e74bfda9cf44/download/otp_time_series_web.csv';
-      const { rows, monthsAsc } = await fetchViaCsv(CORS_HELPER(rawUrl), scope);
+      // 3) Final fallback using public CORS helper (works without proxy, e.g. Render)
+      const rawUrl =
+        'https://data.gov.au/data/dataset/29128ebd-dbaa-4ff5-8b86-d9f30de56452/resource/cf663ed1-0c5e-497f-aea9-e74bfda9cf44/download/otp_time_series_web.csv';
+      const { rows, monthsAsc } = await fetchViaCsv(
+        CORS_HELPER(rawUrl),
+        scope
+      );
       return { rows: rows.slice(0, Math.min(limit, rows.length)), monthsAsc };
     }
   }
 }
-
-
 
