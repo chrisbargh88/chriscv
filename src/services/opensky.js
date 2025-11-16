@@ -31,8 +31,6 @@ export async function fetchLiveFlightsCount() {
   return { count, source: 'OpenSky' };
 }
 
-// --- New helpers for list view ---
-
 // Sydney Airport approx coords (YSSY)
 const SYD = { lat: -33.9399, lon: 151.1753 };
 

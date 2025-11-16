@@ -6,7 +6,7 @@ export default function DelayChart() {
   const [monthsAsc, setMonthsAsc] = useState([]);
   const [month, setMonth] = useState('');
   const [airline, setAirline] = useState('');
-  const [scope, setScope] = useState('SYD'); // default to SYD for your brief
+  const [scope, setScope] = useState('SYD');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [usingProxy, setUsingProxy] = useState(false);

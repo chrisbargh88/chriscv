@@ -1,51 +1,101 @@
-import React from 'react';
+// src/pages/Contact.jsx
+import React, { useState } from "react";
+import homerImg from "../images/homer_simpson.png";
 
 export default function Contact() {
+  const [status, setStatus] = useState("");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const params = new URLSearchParams(formData);
+    window.location.href = `mailto:christopherbargh@gmail.com?subject=Website%20Contact%20from%20${params.get(
+      "name"
+    )}&body=${encodeURIComponent(
+      `Name: ${params.get("name")}\nEmail: ${params.get(
+        "email"
+      )}\n\nMessage:\n${params.get("message")}`
+    )}`;
+    setStatus("Email client opened — please send your message.");
+  };
+
   return (
-    <main className="container py-5">
-      <div className="row justify-content-center">
-        <div className="col-12 col-md-8 col-lg-6">
-          <h1 className="h3 mb-4 text-center">Contact Chris</h1>
-          <p className="text-muted text-center mb-4">
-            Have a project, collaboration idea, or automation question? 
-            Reach out using the form below or send me an email directly.
-          </p>
+    <main className="contact-fullpage">
+      <div className="contact-inner">
+        <div className="contact-grid">
+          {/* Homer Image */}
+          <div className="contact-left">
+            <img
+              src={homerImg}
+              alt="Homer Simpson"
+              className="contact-homer"
+            />
+          </div>
 
-          {/* Contact form (placeholder only) */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              alert('Contact form not yet connected — please email directly.');
-            }}
-            className="card border-0 shadow-sm p-4"
-          >
-            <div className="mb-3">
-              <label htmlFor="name" className="form-label">Name</label>
-              <input type="text" id="name" className="form-control" placeholder="Your name" required />
-            </div>
-            <div className="mb-3">
-              <label htmlFor="email" className="form-label">Email</label>
-              <input type="email" id="email" className="form-control" placeholder="you@example.com" required />
-            </div>
-            <div className="mb-3">
-              <label htmlFor="message" className="form-label">Message</label>
-              <textarea id="message" rows="5" className="form-control" placeholder="Write your message..." required />
-            </div>
-            <div className="d-grid">
-              <button type="submit" className="btn btn-primary btn-lg">
-                Send Message
-              </button>
-            </div>
-          </form>
+          {/* Contact Form */}
+          <div className="contact-right">
+            <div className="contact-card card p-4 border-0 shadow-sm">
+              <h1 className="contact-title text-center mb-3">
+                Get in Touch, D’oh!
+              </h1>
 
-          <div className="text-center mt-4">
-            <p className="small text-muted mb-1">Prefer email?</p>
-            <a
-              href="mailto:christopherbargh@gmail.com"
-              className="link-primary text-decoration-none fw-semibold"
-            >
-              christopherbargh@gmail.com
-            </a>
+              <p className="contact-subtitle text-center mb-4">
+                Have a project, question, idea? Drop me a note below!
+              </p>
+
+              <form onSubmit={handleSubmit}>
+                <div className="mb-3">
+                  <label htmlFor="name" className="form-label">Name</label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    className="form-control contact-input"
+                    placeholder="Homer J. Simpson"
+                    required
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label htmlFor="email" className="form-label">Email</label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    className="form-control contact-input"
+                    placeholder="donuts@springfield.com"
+                    required
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label htmlFor="message" className="form-label">Message</label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    className="form-control contact-input"
+                    rows="5"
+                    placeholder="Mmm... donuts and automation!"
+                    required
+                  />
+                </div>
+
+                <button type="submit" className="btn contact-btn w-100">
+                  Send Message 🍩
+                </button>
+              </form>
+
+              {status && (
+                <p className="contact-status text-center mt-3">{status}</p>
+              )}
+
+              <div className="text-center mt-4">
+                <p className="small">Prefer email?</p>
+                <a href="mailto:christopherbargh@gmail.com" className="contact-email">
+                  christopherbargh@gmail.com
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </div>

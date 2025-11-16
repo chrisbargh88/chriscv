@@ -12,7 +12,7 @@ const RESUME_INDEX = [
     url: '/resume#experience',
     excerpt:
       'Lead enterprise transformation across finance and supply chain; design orchestration layers above ERP/ECM; OCR, RPA, API integration (SAP, TechnologyOne, Oracle).',
-    tags: ['Xcellerate IT', 'workflow', 'orchestration', 'SAP', 'TechnologyOne', 'Oracle', 'OCR', 'RPA', 'Sydney'],
+    tags: ['Xcellerate IT', 'workflow', 'orchestration', 'SAP', 'TechnologyOne', 'Oracle', 'OCR', 'RPA', 'Sydney', 'Ipaas', 'React', 'Flask', 'Django'],
   },
   {
     id: 'exp-citrix',

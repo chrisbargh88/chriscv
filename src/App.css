@@ -1,34 +1,58 @@
 /* =========================================================
    CHRISCV Global Styles (Bootstrap-friendly)
-   - Single stylesheet for all pages/components
-   - No inline styles in React components
-   - Light default theme + dark "tech" theme for Portfolio
+   Single stylesheet, organised by page/feature
    ========================================================= */
 
 /* ---------- Base & Typography ---------- */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-* { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
 
 body {
   margin: 0;
   font-family: 'Inter', 'Roboto', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-  background-color: #f3f5f8;         /* light, professional default */
+  background-color: #f3f5f8;  /* light default for non-themed pages */
   color: #1a1f2b;
   line-height: 1.6;
 }
 
-a { color: #0d6efd; text-decoration: none; }
-a:hover { text-decoration: underline; }
+a {
+  color: #0d6efd;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
 
-h1, h2, h3, h4, h5 { font-weight: 600; color: #3b6591; }
-p { margin-bottom: 0.8rem; }
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-weight: 600;
+  color: #3b6591;
+}
 
-main.container { max-width: 960px; }
-.container-xl   { max-width: 1140px; }
+p {
+  margin-bottom: 0.8rem;
+}
 
-/* ---------- Cards / Lists / Badges ---------- */
+main.container {
+  max-width: 960px;
+}
+
+.container-xl {
+  max-width: 1140px;
+}
+
+/* ---------- Shared Card / Badge Styles ---------- */
+
 .card {
   border-radius: 0.75rem;
   transition: box-shadow 0.2s ease, transform 0.15s ease;
@@ -36,7 +60,7 @@ main.container { max-width: 960px; }
 }
 .card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 0.5rem 1rem rgba(13,27,42,0.10);
+  box-shadow: 0 0.5rem 1rem rgba(13, 27, 42, 0.1);
 }
 
 .list-group-item {
@@ -52,21 +76,116 @@ main.container { max-width: 960px; }
   padding: 0.4em 0.6em;
 }
 
-/* ---------- Footer ---------- */
-.site-footer {
-  border-top: 1px solid #e5e7eb;
-  padding: 20px;
-  text-align: center;
-  color: #6c757d;
+/* =========================================================
+   NAVBAR • Default / Home Transparent / Simpsons (Contact)
+   ========================================================= */
+
+/* Default (most pages) */
+.navbar-default {
+  background-color: #fff !important;
+  border-bottom: 1px solid #dee2e6 !important;
+  transition: background-color 0.3s ease, border 0.3s ease;
+}
+.navbar-default .navbar-brand,
+.navbar-default .nav-link {
+  color: #212529 !important;
+}
+.navbar-default .nav-link.active {
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.navbar-default .nav-search-btn {
+  border-color: #0d6efd;
+  color: #0d6efd;
+}
+.navbar-default .nav-search-btn:hover {
+  background-color: #0d6efd;
+  color: #fff;
+}
+
+/* Transparent (Home over hero) */
+.navbar-hero {
+  background: transparent !important;
+  border: none !important;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 10;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+.navbar-hero .navbar-brand,
+.navbar-hero .nav-link {
+  color: #fff !important;
+}
+.navbar-hero .nav-link.active {
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.navbar-hero .nav-search-btn {
+  border-color: #fff;
+  color: #fff;
+}
+.navbar-hero .nav-search-btn:hover {
   background-color: #fff;
+  color: #000;
+}
+.navbar-hero .navbar-toggler {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+.navbar-hero .navbar-toggler-icon {
+  filter: invert(1);
+  opacity: 0.9;
+}
+
+/* Simpsons skin (Contact page) */
+.navbar-simpsons {
+  background: linear-gradient(180deg, #7ec8ff 0%, #5ab0f6 80%);
+}
+.navbar-simpsons .navbar-brand,
+.navbar-simpsons .nav-link {
+  color: #2b2b2b !important;
+  font-weight: 600;
+}
+.navbar-simpsons .nav-link:hover,
+.navbar-simpsons .nav-link.active {
+  color: #d32f2f !important;
+}
+.navbar-simpsons .nav-search-btn {
+  background: #fdd835;
+  border: 2px solid #fbc02d;
+  color: #2b2b2b;
+}
+.navbar-simpsons .nav-search-btn:hover {
+  background: #ffeb3b;
+  color: #000;
+}
+.navbar-simpsons .form-control {
+  border: 2px solid #fbc02d;
+  background: #fffde7;
+}
+.navbar-simpsons .form-control:focus {
+  border-color: #d32f2f;
+  box-shadow: 0 0 0 0.2rem rgba(211, 47, 47, 0.25);
+}
+
+/* Shared nav link hover */
+.navbar .nav-link {
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+.navbar .nav-link:hover {
+  opacity: 0.8;
 }
 
 /* =========================================================
-   HOME • Hero
+   HOME • Hero (background image)
    ========================================================= */
+
 .hero-banner {
   min-height: 100vh;
-  background-image: url('/public/hero-bg.jpg');
+  background-image: url('/public/hero-bg.jpg'); 
   background-size: cover;
   background-position: center right;
   background-repeat: no-repeat;
@@ -74,308 +193,596 @@ main.container { max-width: 960px; }
 }
 .hero-banner::before {
   content: '';
-  position: absolute; inset: 0;
-  background: linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0) 100%);
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.55) 0%,
+    rgba(0, 0, 0, 0.25) 60%,
+    rgba(0, 0, 0, 0) 100%
+  );
   z-index: 0;
 }
-.hero-banner .container { position: relative; z-index: 1; }
-
-/* =========================================================
-   NAVBAR • Default + Transparent (Home) + Dark (Portfolio)
-   ========================================================= */
-/* Default (non-Home pages) */
-.navbar-default {
-  background-color: #fff !important;
-  border-bottom: 1px solid #dee2e6 !important;
-  transition: background-color 0.3s ease, border 0.3s ease;
-}
-.navbar-default .navbar-brand,
-.navbar-default .nav-link { color: #212529 !important; }
-.navbar-default .nav-link.active {
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-}
-.navbar-default .nav-search-btn { border-color: #0d6efd; color: #0d6efd; }
-.navbar-default .nav-search-btn:hover { background-color: #0d6efd; color: #fff; }
-
-/* Transparent (Home over hero) */
-.navbar-hero {
-  background: transparent !important;
-  border: none !important;
-  position: absolute; top: 0; left: 0; width: 100%;
-  z-index: 10;
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-.navbar-hero .navbar-brand,
-.navbar-hero .nav-link { color: #fff !important; }
-.navbar-hero .nav-link.active {
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-}
-.navbar-hero .nav-search-btn { border-color: #fff; color: #fff; }
-.navbar-hero .nav-search-btn:hover { background-color: #fff; color: #000; }
-.navbar-hero .navbar-toggler { border-color: rgba(255,255,255,0.5); }
-.navbar-hero .navbar-toggler-icon { filter: invert(1); opacity: 0.9; }
-
-/* Shared link hover */
-.navbar .nav-link { transition: color 0.2s ease, opacity 0.2s ease; }
-.navbar .nav-link:hover { opacity: 0.8; }
-
-/* Dark (Portfolio) */
-.navbar-tech {
-  background: rgba(14,18,32,0.9) !important;
-  border-bottom: 1px solid rgba(113,230,255,0.25);
-  backdrop-filter: blur(8px);
-}
-.navbar-tech .navbar-brand,
-.navbar-tech .nav-link { color: #dbe7ff !important; }
-.navbar-tech .nav-link.active {
-  color: #71e6ff !important;
-  text-shadow: 0 0 8px rgba(113,230,255,0.6);
+.hero-banner .container {
+  position: relative;
+  z-index: 1;
 }
 
 /* =========================================================
-   RESUME • Masthead / chips / timeline / quicknav
+   RESUME PAGE
    ========================================================= */
-.resume .card { border-radius: 14px; }
-
-.resume .resume-section-title {
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-  border-bottom: 1px solid #e9ecef;
-  font-weight: 600;
-  color: #2a6bb1;
-}
-
-.resume-masthead {
-  background: linear-gradient(135deg, #0d6efd0d 0%, #0d6efd1a 60%, #ffffff 100%);
-}
 
 /* Chips */
-.chip, .resume-chips .chip {
+.chip,
+.resume-chips .chip {
   display: inline-block;
-  padding: .35rem .6rem;
+  padding: 0.35rem 0.6rem;
   border-radius: 999px;
-  font-size: .75rem;
+  font-size: 0.75rem;
   line-height: 1;
-  background: #eef2ff;
-  color: #3b5bdb;
-  border: 1px solid #dbe4ff;
+  background: rgba(56, 189, 248, 0.12);
+  color: #e0f2fe;
+  border: 1px solid rgba(56, 189, 248, 0.7);
 }
 .chip-light {
-  background: #f8fafc;
-  border: 1px solid #e5e7eb;
-  color: #0f172a;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  color: #e5e7eb;
 }
 
 /* Quick nav */
-.resume-quicknav { position: sticky; top: 90px; }
-.resume-quicknav .list-group-item {
-  padding: .65rem .9rem;
-  border: none;
-  border-bottom: 1px solid #f0f2f4;
+.resume-quicknav {
+  position: sticky;
+  top: 90px;
 }
-.resume-quicknav .list-group-item:last-child { border-bottom: none; }
-.resume-quicknav .list-group-item:hover { background: #f8fafc; }
+.resume-quicknav .list-group-item {
+  padding: 0.65rem 0.9rem;
+  border: none;
+  border-bottom: 1px solid rgba(55, 65, 81, 0.8);
+  background: transparent;
+  color: #e5e7eb;
+}
+.resume-quicknav .list-group-item:last-child {
+  border-bottom: none;
+}
+.resume-quicknav .list-group-item:hover,
+.resume-quicknav .list-group-item:focus {
+  background: rgba(31, 41, 55, 0.9);
+  color: #f9fafb;
+}
 
 /* Timeline */
-.resume-timeline { position: relative; margin-left: .5rem; padding-left: 1.25rem; }
+.resume-timeline {
+  position: relative;
+  margin-left: 0.5rem;
+  padding-left: 1.25rem;
+}
 .resume-timeline::before {
-  content: ""; position: absolute; top: .2rem; bottom: .2rem; left: .3rem;
-  width: 2px; background: linear-gradient(#cbd5e1, #e2e8f0);
+  content: '';
+  position: absolute;
+  top: 0.2rem;
+  bottom: 0.2rem;
+  left: 0.3rem;
+  width: 2px;
+  background: linear-gradient(#4b5563, #6b7280);
 }
-.resume-timeline-item { position: relative; padding-left: .75rem; margin-bottom: 1.25rem; }
-.resume-timeline-item:last-child { margin-bottom: 0; }
+.resume-timeline-item {
+  position: relative;
+  padding-left: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+.resume-timeline-item:last-child {
+  margin-bottom: 0;
+}
 .resume-timeline-item::before {
-  content: ""; position: absolute; left: -.1rem; top: .3rem;
-  width: 10px; height: 10px; border-radius: 50%;
-  border: 2px solid #0d6efd; background: #fff;
+  content: '';
+  position: absolute;
+  left: -0.1rem;
+  top: 0.3rem;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #38bdf8;
+  background: #020617;
 }
-.resume-tl-header .badge { font-weight: 600; }
-.resume-list { padding-left: 1.1rem; }
-.resume-list li { margin-bottom: .35rem; }
-
-/* =========================================================
-   PORTFOLIO • Light widgets + repo grid (kept for reuse)
-   ========================================================= */
-.portfolio { color: #1a1f2b; }
-
-.portfolio-card {
-  border-radius: 1rem;
-  background: linear-gradient(180deg, #ffffff 0%, #f9fafc 100%);
-  transition: box-shadow 0.2s ease, transform 0.15s ease;
-  color: #1b1e23;
-}
-.portfolio-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0.75rem 1.25rem rgba(0,0,0,0.07);
-}
-.portfolio-card h2 {
-  letter-spacing: 0.05em;
+.resume-tl-header .badge {
   font-weight: 600;
-  color: #0b5ed7 !important;
-  text-shadow: 0 0 2px rgba(255,255,255,0.4);
+  background: rgba(55, 65, 81, 0.9);
+  color: #e5e7eb;
+  border: 1px solid rgba(148, 163, 184, 0.9);
 }
-.portfolio-card h2::after {
-  content: ""; display: block; width: 60px; height: 2px; margin-top: 6px;
-  background: linear-gradient(90deg, #0b5ed7 0%, transparent 100%); opacity: 0.7;
+
+/* Lists */
+.resume-list {
+  padding-left: 1.1rem;
 }
-.portfolio-filter {
-  background: #fff; border-radius: 1rem; border: 1px solid #e6e9ee;
+.resume-list li {
+  margin-bottom: 0.35rem;
 }
-.portfolio-filter input,
-.portfolio-filter select {
-  background: #f8f9fb; border: 1px solid #dee2e6;
+
+/* Better paragraph spacing in resume + about cards */
+.resume-page .about-card p,
+.about-page .about-card p {
+  margin-bottom: 1.1rem !important;   /* more breathing room */
+  line-height: 1.65;
 }
-.portfolio-filter input:focus,
-.portfolio-filter select:focus {
-  background: #fff; border-color: #0d6efd;
-  box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.15);
+
+/* Last paragraph in a block should not get extra spacing */
+.resume-page .about-card p:last-child,
+.about-page .about-card p:last-child {
+  margin-bottom: 0 !important;
 }
-.repo-card {
-  background: #fff; border-radius: 0.75rem;
-  transition: box-shadow 0.2s ease, transform 0.15s ease;
+
+/* Fix for muted text inside dark cards (Resume + About) */
+.about-page .about-card .text-muted,
+.about-page .about-card-secondary .text-muted,
+.resume-page .about-card .text-muted,
+.resume-page .about-card-secondary .text-muted,
+.about-page .about-card .small.text-muted,
+.resume-page .about-card .small.text-muted {
+  color: rgba(220, 235, 255, 0.85) !important;
 }
-.repo-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 0.75rem 1.25rem rgba(13,27,42,0.08);
+
+/* Fix small text without "text-muted" */
+.about-page .about-card .small,
+.resume-page .about-card .small {
+  color: rgba(220, 235, 255, 0.9) !important;
 }
-.repo-card .lang-badge {
-  font-size: 0.7rem; padding: 0.4em 0.6em;
-  border-radius: 999px; border: 1px solid #e5e7eb;
-  text-transform: capitalize; background: #f8fafc;
+
+/* Fix timeline dates (they inherit muted colours) */
+.resume-page .resume-timeline-item .text-muted {
+  color: rgba(220, 235, 255, 0.75) !important;
 }
-.lang-badge.javascript { background-color: #fff3cd; border-color: #ffe69c; color: #856404; }
-.lang-badge.react, .lang-badge.jsx { background-color: #e0f7ff; border-color: #b3ecff; color: #055160; }
-.lang-badge.python { background-color: #d1ecf1; border-color: #bee5eb; color: #0c5460; }
-.lang-badge.html { background-color: #fdecea; border-color: #f5c6cb; color: #721c24; }
-.lang-badge.css { background-color: #e2e3ff; border-color: #cfd0ff; color: #383d8d; }
-.lang-badge.neutral { background: #f8f9fa; color: #6c757d; }
+
 
 /* =========================================================
-   PORTFOLIO • Dark Tech Skin (subtle 80s vibe)
+   PORTFOLIO PAGE • Dark tech theme
    ========================================================= */
-.theme-tech {
-  --tech-bg: #0e1220;
-  --tech-panel: #121733;
-  --tech-panel-2: #0f1630;
-  --tech-border: #1f2550;
-  --tech-text: #dbe7ff;
+
+.portfolio-page {
+  --tech-bg: #0b1020;
+  --tech-panel: #111827;
+  --tech-panel-2: #020617;
+  --tech-border: #1f2937;
+  --tech-text: #e5edff;
   --tech-muted: #9fb3d9;
-  --tech-accent: #71e6ff;
-  --tech-accent-2: #ff6ad5;
-  --tech-shadow: 0 10px 30px rgba(14,18,32,0.6);
-  --tech-glow: 0 0 40px rgba(113,230,255,0.12);
+  --tech-accent: #8fc7ff;
+  --tech-accent-2: #e5edff;
+
+  background: radial-gradient(circle at top, #1f2937 0%, #020617 55%, #000 100%);
+  min-height: 100vh;
+  padding: 4rem 1.5rem;
   color: var(--tech-text);
 }
 
-.theme-tech.container-xl {
-  background: radial-gradient(1200px 600px at 100% -10%, rgba(113,230,255,0.06), transparent 60%),
-              radial-gradient(900px 400px at -10% 110%, rgba(255,106,213,0.05), transparent 60%),
-              var(--tech-bg);
-  border-radius: 18px;
-  box-shadow: var(--tech-shadow);
+/* keep content centred */
+.portfolio-page .container-xl {
+  max-width: 1140px;
+  margin: 0 auto;
 }
 
-/* Neon title + helpers */
+/* All cards dark on this page */
+.portfolio-page .card {
+  background-color: var(--tech-panel);
+  border-color: var(--tech-border);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.8);
+}
+
+/* Main neon heading */
 .neon-title {
   font-size: clamp(28px, 4vw, 42px);
   font-weight: 700;
   letter-spacing: 0.5px;
-  background: linear-gradient(90deg, var(--tech-accent), var(--tech-accent-2));
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-  text-shadow: 0 0 18px rgba(113,230,255,0.25);
-}
-.section-subtitle { color: var(--tech-text); opacity: 0.9; }
-.muted-80s { color: var(--tech-muted) !important; }
-.link-80s { color: var(--tech-accent) !important; }
-.link-80s:hover { text-decoration: underline; }
-.link-80s-subtle { color: rgba(113,230,255,0.85) !important; }
-.link-80s-subtle:hover { color: var(--tech-accent) !important; }
-
-/* Dark panels */
-.portfolio-card.dark,
-.repo-card.dark,
-.portfolio-filter.dark {
-  background: linear-gradient(180deg, var(--tech-panel) 0%, var(--tech-panel-2) 100%);
-  border: 1px solid var(--tech-border);
-  box-shadow: var(--tech-glow);
-  color: var(--tech-text);
-  border-radius: 14px;
+  color: var(--tech-accent);
+  text-shadow:
+    0 0 8px rgba(100, 158, 235, 0.6),
+    0 0 16px rgba(214, 18, 198, 0.4);
 }
 
+/* Subtitle and muted text */
+.section-subtitle,
+.muted-80s {
+  color: rgba(220, 235, 255, 0.8) !important;
+}
+
+/* Links */
+.link-80s {
+  color: var(--tech-accent) !important;
+}
+.link-80s:hover {
+  text-decoration: underline;
+}
+.link-80s-subtle {
+  color: rgba(143, 199, 255, 0.9) !important;
+}
+.link-80s-subtle:hover {
+  color: var(--tech-accent) !important;
+}
+
+/* Panel headings (Sydney live flights / SYD domestic...) */
 .panel-title {
-  text-transform: uppercase; letter-spacing: 0.08em;
-  font-weight: 600; color: var(--tech-text);
-  position: relative; padding-bottom: 6px;
+  text-transform: none;
+  letter-spacing: 0.03em;
+  font-weight: 600;
+  color: #a8d8ff !important;
+  position: relative;
+  padding-bottom: 6px;
+  text-shadow: 0 0 6px rgba(143, 199, 255, 0.4);
 }
 .panel-title::after {
-  content: ""; position: absolute; left: 0; bottom: 0; width: 72px; height: 2px;
-  background: linear-gradient(90deg, var(--tech-accent), transparent 80%);
-  box-shadow: 0 0 10px rgba(113,230,255,0.5);
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 72px;
+  height: 2px;
+  background: linear-gradient(90deg, #8fc7ff, transparent 80%);
+  box-shadow: 0 0 10px rgba(143, 199, 255, 0.5);
 }
 
-/* Dark inputs/buttons/alerts */
+/* Inputs/buttons/alerts in tech theme */
 .tech-input {
-  color: var(--tech-text); background: #0c1130; border: 1px solid #263067;
+  color: var(--tech-text);
+  background: #020617;
+  border: 1px solid #27336b;
 }
-.tech-input::placeholder { color: #8596c7; }
+.tech-input::placeholder {
+  color: #8596c7;
+}
 .tech-input:focus {
-  color: var(--tech-text); background: #0c1130; border-color: var(--tech-accent);
-  box-shadow: 0 0 0 0.2rem rgba(113,230,255,0.18);
+  color: var(--tech-text);
+  background: #020617;
+  border-color: var(--tech-accent);
+  box-shadow: 0 0 0 0.2rem rgba(113, 230, 255, 0.18);
 }
+
 .btn-ghost-80s {
-  border: 1px solid var(--tech-accent); color: var(--tech-accent); background: transparent;
+  border: 1px solid var(--tech-accent);
+  color: var(--tech-accent);
+  background: transparent;
 }
 .btn-ghost-80s:hover {
-  background: linear-gradient(90deg, rgba(113,230,255,0.12), rgba(255,106,213,0.12));
-  color: #fff; border-color: var(--tech-accent);
+  background: linear-gradient(
+    90deg,
+    rgba(113, 230, 255, 0.12),
+    rgba(255, 106, 213, 0.12)
+  );
+  color: #fff;
+  border-color: var(--tech-accent);
 }
+
+/* Alerts on portfolio page */
 .alert-80s {
-  background: rgba(113,230,255,0.08); color: var(--tech-text);
+  background: rgba(113, 230, 255, 0.08);
+  color: var(--tech-text);
   border: 1px solid var(--tech-accent);
 }
 
-/* Dark repo chips */
-.repo-card.dark .lang-badge {
-  background: rgba(255,255,255,0.06);
+/* Repo cards */
+.repo-card {
+  border-radius: 0.9rem;
+}
+.portfolio-page .repo-card {
+  background: linear-gradient(180deg, var(--tech-panel) 0%, var(--tech-panel-2) 100%);
+  border: 1px solid #27336b;
+}
+
+/* Language badges (dark mode) */
+.repo-card .lang-badge {
+  font-size: 0.7rem;
+  padding: 0.4em 0.6em;
+  border-radius: 999px;
   border: 1px solid #2b376a;
+  text-transform: capitalize;
+  background: rgba(66, 177, 56, 0.04);
   color: var(--tech-text);
 }
-.lang-badge.neutral { background: rgba(255,255,255,0.06); color: var(--tech-muted); }
-.lang-badge.javascript { background-color: rgba(255,243,205,0.15); border-color: #ffe69c22; color: #ffdf7e; }
-.lang-badge.react, .lang-badge.jsx { background-color: rgba(224,247,255,0.15); border-color: #b3ecff22; color: #9be3ff; }
-.lang-badge.python { background-color: rgba(209,236,241,0.15); border-color: #bee5eb22; color: #bfe7f0; }
-.lang-badge.html { background-color: rgba(253,236,234,0.15); border-color: #f5c6cb22; color: #ffc1bd; }
-.lang-badge.css { background-color: rgba(226,227,255,0.15); border-color: #cfd0ff22; color: #c9ccff; }
+.lang-badge.neutral {
+  color: var(--tech-muted);
+}
+.lang-badge.javascript {
+  background-color: rgba(255, 243, 205, 0.15);
+  border-color: #ffe69c22;
+  color: #ffdf7e;
+}
+.lang-badge.react,
+.lang-badge.jsx {
+  background-color: rgba(224, 247, 255, 0.15);
+  border-color: #b3ecff22;
+  color: #9be3ff;
+}
+.lang-badge.python {
+  background-color: rgba(209, 236, 241, 0.15);
+  border-color: #bee5eb22;
+  color: #bfe7f0;
+}
+.lang-badge.html {
+  background-color: rgba(253, 236, 234, 0.15);
+  border-color: #f5c6cb22;
+  color: #ffc1bd;
+}
+.lang-badge.css {
+  background-color: rgba(226, 227, 255, 0.15);
+  border-color: #cfd0ff22;
+  color: #c9ccff;
+}
 
-/* =========================================================
-   PORTFOLIO • Page backdrop toggle (when route is /portfolio)
-   - Navbar.jsx toggles body.portfolio-active
-   ========================================================= */
-body.portfolio-active {
-  background: radial-gradient(1600px 800px at 50% -20%, rgba(113,230,255,0.06), transparent 60%),
-              linear-gradient(180deg, #0b0f1c 0%, #0a0c18 100%);
+/* BITRE / API captions and any muted/small text on portfolio */
+.portfolio-page .api-caption,
+.portfolio-page small,
+.portfolio-page .text-muted {
+  color: rgba(210, 225, 255, 0.9) !important;
+}
+
+/* Airline delay minutes and BITRE caption overrides */
+.portfolio-page .bitre-delay-value,
+.portfolio-page small.delay-value,
+.portfolio-page .delay-value {
+  color: #1b5197 !important;
+  font-weight: 600 !important;
+}
+
+.bitre-panel .bitre-caption,
+.bitre-panel .text-muted,
+.bitre-panel small {
+  color: #2e447c !important;
+}
+
+.bitre-panel .delay-value {
+  color: #345b8f !important;
+  font-weight: 600 !important;
+}
+
+/* Form labels + controls on portfolio (BITRE filters, etc.) */
+.portfolio-page .form-label {
+  color: rgba(220, 235, 255, 0.92) !important;
+  font-weight: 500;
+}
+
+/* Dropdowns + text inputs on the dark background */
+.portfolio-page .form-select,
+.portfolio-page .form-control {
   color: var(--tech-text);
+  background-color: #020617;
+  border: 1px solid #27336b;
 }
-.theme-tech.container-xl {
-  background: none !important; box-shadow: none; color: var(--tech-text);
+
+.portfolio-page .form-select::placeholder,
+.portfolio-page .form-control::placeholder {
+  color: #8596c7;
 }
-/* keep cards dark even inside container */
-.theme-tech.container-xl .card,
-.theme-tech.container-xl .card-body {
-  background: linear-gradient(180deg, #121733 0%, #0f1630 100%);
+
+.portfolio-page .form-select:focus,
+.portfolio-page .form-control:focus {
+  color: var(--tech-text);
+  background-color: #020617;
+  border-color: var(--tech-accent);
+  box-shadow: 0 0 0 0.2rem rgba(113, 230, 255, 0.18);
+}
+
+/* Force dark-theme form helper text (BITRE caption) */
+.portfolio-page .form-text {
+  color: rgba(210, 225, 255, 0.9) !important;
 }
 
 /* =========================================================
-   FOOTER — Unified style (dark & light adaptive)
+   CONTACT PAGE • Simpsons-inspired full-width layout
    ========================================================= */
 
-/* Default: light pages */
+.contact-fullpage {
+  min-height: 100vh;
+  width: 100%;
+  background: #ff81c1;
+  display: flex;
+  justify-content: center;
+  padding: 4rem 1rem;
+}
+
+.contact-inner {
+  width: 100%;
+  max-width: 1200px;
+}
+
+/* Grid layout */
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+@media (max-width: 900px) {
+  .contact-grid {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+}
+
+.contact-left {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.contact-right {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Card + typography */
+.contact-card {
+  width: 100%;
+  background: #fff3cd;
+  border-radius: 1rem;
+  border: 2px solid #fbc02d;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  padding: 2rem;
+}
+
+.contact-title {
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  color: #2e3192;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.6);
+}
+.contact-subtitle {
+  color: #3c3c3c;
+  font-weight: 500;
+}
+
+/* Inputs + button */
+.contact-input {
+  border-radius: 0.5rem;
+  border: 2px solid #fbc02d;
+  background-color: #fffde7;
+  color: #2b2b2b;
+}
+.contact-input:focus {
+  border-color: #2e3192;
+  box-shadow: 0 0 0 0.2rem rgba(46, 49, 146, 0.25);
+}
+
+.contact-btn {
+  background: #2e3192;
+  color: #fff;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+.contact-btn:hover {
+  background: #1b1f75;
+  transform: translateY(-2px);
+}
+
+/* Status + email */
+.contact-status {
+  color: #2e3192;
+  font-weight: 500;
+}
+.contact-email {
+  color: #d32f2f;
+  text-decoration: none;
+}
+.contact-email:hover {
+  color: #e57373;
+  text-decoration: underline;
+}
+
+/* Homer image animation */
+.contact-homer {
+  width: 100%;
+  max-width: 260px;
+  animation: donut-bob 3s ease-in-out infinite;
+}
+@keyframes donut-bob {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* =========================================================
+   ABOUT PAGE • Dark studio theme + gallery
+   ========================================================= */
+
+.about-page {
+  background: radial-gradient(circle at top, #1f2937 0%, #020617 55%, #000 100%);
+  min-height: 100vh;
+  padding: 4rem 1.5rem;
+  color: #e5e7eb;
+}
+.about-page .container {
+  max-width: 960px;
+}
+
+/* Header */
+.about-kicker {
+  letter-spacing: 0.18em;
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+.about-title {
+  font-size: 1.9rem;
+  font-weight: 600;
+  color: #f9fafb;
+}
+.about-subtitle {
+  color: #9ca3af;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* Cards */
+.about-card,
+.about-card-secondary {
+  background: rgba(15, 23, 42, 0.95);
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  padding: 1.75rem;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.75);
+}
+.about-card-secondary {
+  background: radial-gradient(circle at top, #111827 0%, #020617 60%);
+}
+
+/* Portrait */
+.about-portrait {
+  width: 150px;
+  height: 150px;
+  border-radius: 999px;
+  background-image: url('/public/hero-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  border: 3px solid #38bdf8;
+  box-shadow:
+    0 0 0 4px rgba(15, 23, 42, 0.9),
+    0 0 25px rgba(56, 189, 248, 0.7);
+}
+
+/* Quick facts list */
+.about-facts li {
+  color: #d1d5db;
+}
+
+/* Gallery */
+.about-gallery {
+  margin-bottom: 2rem;
+}
+.about-gallery-hint {
+  color: #6b7280;
+}
+.about-gallery-item {
+  cursor: default;
+}
+.about-gallery-img-wrapper {
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: #020617;
+  border: 1px solid rgba(55, 65, 81, 0.7);
+}
+.about-gallery-img {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+  transform: scale(1.01);
+  transition: transform 0.25s ease, filter 0.25s ease;
+}
+.about-gallery-img-wrapper:hover .about-gallery-img {
+  transform: scale(1.06);
+  filter: brightness(1.07);
+}
+.about-gallery-caption {
+  color: #9ca3af;
+}
+
+/* =========================================================
+   FOOTER • Gunmetal strip
+   ========================================================= */
+
 .site-footer {
-  background: linear-gradient(180deg, #2c2f35 0%, #1d2024 100%); /* gunmetal */
-  color: #b0c4de; /* steel blue text */
+  background: linear-gradient(180deg, #2c2f35 0%, #1d2024 100%);
+  color: #b0c4de;
   text-align: center;
   padding: 3.5rem 1rem;
   font-size: 0.95rem;
@@ -383,15 +790,11 @@ body.portfolio-active {
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
 }
-
-/* Give footer consistent presence on short pages */
 .site-footer::before {
-  content: "";
+  content: '';
   display: block;
   height: 0.25rem;
 }
-
-/* Links / accent on hover */
 .site-footer a {
   color: #71e6ff;
   text-decoration: none;
@@ -400,11 +803,3 @@ body.portfolio-active {
 .site-footer a:hover {
   color: #ff6ad5;
 }
-
-/* When body is in portfolio-active (dark tech) mode, slightly shift tone */
-body.portfolio-active .site-footer {
-  background: linear-gradient(180deg, #181c27 0%, #11131c 100%);
-  color: #a6b4e3;
-  border-top: 1px solid rgba(113,230,255,0.25);
-}
-
