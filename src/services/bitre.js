@@ -1,8 +1,7 @@
 // src/services/bitre.js
-// BITRE fetcher with 3 paths + month padding:
-// 1) CKAN JSON (GET + sort) via CRA proxy (dev)
-// 2) CSV download via CRA proxy (dev, Papa Parse)
-// 3) CSV via public CORS helper (prod / when proxy not available)
+// BITRE fetcher with 2 paths + month padding:
+// 1) Remote CSV via AllOrigins (CORS-safe wrapper around data.gov.au)
+// 2) Local CSV from /public as a fallback
 //
 // Export: fetchBitreLatest(limit = 5000, { scope = 'ALL' })
 //  - rows: per-airline rows (optionally filtered to Departing_Port = 'Sydney' when scope === 'SYD')
@@ -10,13 +9,14 @@
 
 import Papa from 'papaparse';
 
-const RESOURCE_ID = 'cf663ed1-0c5e-497f-aea9-e74bfda9cf44';
+// Remote BITRE CSV (public on data.gov.au)
+const REMOTE_CSV_RAW =
+  'https://data.gov.au/data/dataset/29128ebd-dbaa-4ff5-8b86-d9f30de56452/resource/cf663ed1-0c5e-497f-aea9-e74bfda9cf44/download/otp_time_series_web.csv';
 
-// Relative (proxied in dev via "proxy": "https://data.gov.au" in package.json)
-const CKAN_URL = `/data/api/action/datastore_search?resource_id=${RESOURCE_ID}&limit=5000&sort=Year%20desc,%20Month_Num%20desc`;
-const CSV_URL  = `/data/dataset/29128ebd-dbaa-4ff5-8b86-d9f30de56452/resource/${RESOURCE_ID}/download/otp_time_series_web.csv`;
+// Local fallback CSV (place otp_time_series_web.csv in /public)
+const LOCAL_CSV = '/otp_time_series_web.csv';
 
-// Final fallback helper using AllOrigins (CORS-safe for static/prod)
+// Helper to wrap any URL with AllOrigins (CORS-safe)
 const CORS_HELPER = (url) =>
   `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
 
@@ -156,23 +156,8 @@ function keepLatest24MonthsAsc(records) {
   return trimmed;
 }
 
-// ---- CKAN JSON via proxy ----
-async function fetchViaJson(scope) {
-  const res = await fetch(CKAN_URL, { method: 'GET' });
-  if (!res.ok) throw new Error(`CKAN GET failed (${res.status})`);
-  const data = await res.json();
-  if (!data.success || !data.result) throw new Error('CKAN JSON unsuccessful');
-
-  const allRowsRaw = data.result.records || [];
-  const monthsAsc = collectMonthsAscFromAllRows(allRowsRaw);
-  const airlineRows = normaliseAirlineRows(allRowsRaw, scope);
-  const rows = keepLatest24MonthsAsc(airlineRows);
-
-  return { rows, monthsAsc };
-}
-
-// ---- CSV via proxy or public URL (Papa Parse) ----
-async function fetchViaCsv(url = CSV_URL, scope) {
+// ---- Generic CSV loader (remote or local) ----
+async function fetchViaCsv(url, scope) {
   const res = await fetch(url, { method: 'GET' });
   if (!res.ok) throw new Error(`CSV fetch failed (${res.status})`);
   const csv = await res.text();
@@ -196,27 +181,33 @@ async function fetchViaCsv(url = CSV_URL, scope) {
   return { rows, monthsAsc };
 }
 
-// PUBLIC API with scope + 3-step fallback
+// PUBLIC API: remote API first, local fallback
 export async function fetchBitreLatest(limit = 5000, { scope = 'ALL' } = {}) {
   try {
-    // 1) CKAN JSON via CRA proxy (dev)
-    const { rows, monthsAsc } = await fetchViaJson(scope);
-    return { rows: rows.slice(0, Math.min(limit, rows.length)), monthsAsc };
-  } catch {
+    // 1) Remote CSV via AllOrigins (this is your "3rd API")
+    const { rows, monthsAsc } = await fetchViaCsv(
+      CORS_HELPER(REMOTE_CSV_RAW),
+      scope
+    );
+    return {
+      rows: rows.slice(0, Math.min(limit, rows.length)),
+      monthsAsc,
+      source: 'remote',
+    };
+  } catch (err) {
+    console.warn('BITRE remote API failed, trying local CSV fallback', err);
+
     try {
-      // 2) CSV via CRA proxy (dev)
-      const { rows, monthsAsc } = await fetchViaCsv(CSV_URL, scope);
-      return { rows: rows.slice(0, Math.min(limit, rows.length)), monthsAsc };
-    } catch {
-      // 3) Final fallback using public CORS helper (works without proxy, e.g. Render)
-      const rawUrl =
-        'https://data.gov.au/data/dataset/29128ebd-dbaa-4ff5-8b86-d9f30de56452/resource/cf663ed1-0c5e-497f-aea9-e74bfda9cf44/download/otp_time_series_web.csv';
-      const { rows, monthsAsc } = await fetchViaCsv(
-        CORS_HELPER(rawUrl),
-        scope
-      );
-      return { rows: rows.slice(0, Math.min(limit, rows.length)), monthsAsc };
+      // 2) Local CSV from /public (only if remote fails)
+      const { rows, monthsAsc } = await fetchViaCsv(LOCAL_CSV, scope);
+      return {
+        rows: rows.slice(0, Math.min(limit, rows.length)),
+        monthsAsc,
+        source: 'local',
+      };
+    } catch (err2) {
+      console.error('BITRE fetch failed completely', err2);
+      return { rows: [], monthsAsc: [], source: 'error' };
     }
   }
 }
-

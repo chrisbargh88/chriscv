@@ -5,24 +5,36 @@ import homerImg from "../images/homer_simpson.png";
 export default function Contact() {
   const [status, setStatus] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const formData = new FormData(e.target);
-    const params = new URLSearchParams(formData);
-    window.location.href = `mailto:christopherbargh@gmail.com?subject=Website%20Contact%20from%20${params.get(
-      "name"
-    )}&body=${encodeURIComponent(
-      `Name: ${params.get("name")}\nEmail: ${params.get(
-        "email"
-      )}\n\nMessage:\n${params.get("message")}`
-    )}`;
-    setStatus("Email client opened — please send your message.");
+    setStatus("");
+
+    const form = e.target;
+    const data = new FormData(form);
+
+    try {
+      const res = await fetch("https://formspree.io/f/xyzldpoz", {
+        method: "POST",
+        headers: { "Accept": "application/json" },
+        body: data
+      });
+
+      if (res.ok) {
+        setStatus("Thanks! Your message has been sent. 🍩");
+        form.reset();
+      } else {
+        setStatus("Oops! Something went wrong. Please try again.");
+      }
+    } catch (err) {
+      setStatus("Network error — please try again.");
+    }
   };
 
   return (
     <main className="contact-fullpage">
       <div className="contact-inner">
         <div className="contact-grid">
+
           {/* Homer Image */}
           <div className="contact-left">
             <img
@@ -97,6 +109,7 @@ export default function Contact() {
               </div>
             </div>
           </div>
+
         </div>
       </div>
     </main>

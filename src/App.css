@@ -803,3 +803,43 @@ main.container {
 .site-footer a:hover {
   color: #ff6ad5;
 }
+
+/* =========================================
+   Resume mobile tweaks
+   ========================================= */
+
+/* On tablets and down: make quick nav non-sticky and full-width */
+@media (max-width: 991.98px) {
+  .resume-page .resume-quicknav {
+    position: static;
+    top: auto;
+    margin-bottom: 1rem;
+  }
+}
+
+/* On small phones: let headers wrap nicely and reduce padding */
+@media (max-width: 575.98px) {
+  /* Make card padding a bit tighter so content fits comfortably */
+  .resume-page .about-card,
+  .resume-page .about-card-secondary {
+    padding: 1.1rem 1rem;
+  }
+
+  /* Timeline headers: stack title, badge, date instead of forcing one long row */
+  .resume-page .resume-tl-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .resume-page .resume-tl-header .ms-auto {
+    margin-left: 0 !important;
+  }
+
+  /* Ensure no horizontal overflow from chips or badges */
+  .resume-page .resume-chips,
+  .resume-page .resume-timeline-item,
+  .resume-page .resume-timeline {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+}
