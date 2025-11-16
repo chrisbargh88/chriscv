@@ -843,3 +843,22 @@ main.container {
     overflow-x: hidden;
   }
 }
+
+/* Extra fix: align Resume content with header on small screens */
+@media (max-width: 575.98px) {
+  .resume-page .container > .row {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .resume-page .container > .row > [class^="col-"],
+  .resume-page .container > .row > [class*=" col-"] {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  /* Belt-and-braces: kill any stray horizontal scroll */
+  .resume-page {
+    overflow-x: hidden;
+  }
+}
